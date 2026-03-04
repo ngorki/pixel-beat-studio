@@ -188,6 +188,19 @@ export default function StepSequencer({ onTrigger }) {
             FILL
           </button>
         </div>
+
+        <div className="w-px h-6 bg-[#333355]" />
+
+        {/* Quantize button */}
+        <div className="flex items-center gap-2">
+          <button
+            className="pixel-btn text-[8px]"
+            onClick={() => actions.quantizeNotes({ quantizeValue: fillInterval, stepsPerMeasure })}
+            title="Snap all notes to the selected grid"
+          >
+            QUANTIZE TO 1/{fillInterval}
+          </button>
+        </div>
       </div>
 
       <div className="min-w-max p-4">

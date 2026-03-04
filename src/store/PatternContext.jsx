@@ -112,6 +112,7 @@ const ACTIONS = {
   SET_NOTE_VALUE: 'SET_NOTE_VALUE',
   ADD_MEASURE: 'ADD_MEASURE',
   DELETE_MEASURE: 'DELETE_MEASURE',
+  QUANTIZE_NOTES: 'QUANTIZE_NOTES',
   DUPLICATE_MEASURE: 'DUPLICATE_MEASURE',
   UPDATE_SOUND_SETTING: 'UPDATE_SOUND_SETTING',
   UPDATE_KEY_BINDING: 'UPDATE_KEY_BINDING',
@@ -439,6 +440,35 @@ function patternReducer(state, action) {
       };
     }
 
+    case ACTIONS.QUANTIZE_NOTES: {
+      const { quantizeValue, stepsPerMeasure } = action.payload;
+      if (!quantizeValue) return state;
+
+      // Calculate steps per quantization grid
+      const { numerator, denominator } = state.pattern.timeSignature;
+      const quantGridPerMeasure = denominator === 8
+        ? numerator * (quantizeValue / 8)
+        : numerator * (quantizeValue / 4);
+      const stepsPerQuantGrid = stepsPerMeasure / quantGridPerMeasure;
+
+      const measures = state.pattern.measures.map(measure => ({
+        ...measure,
+        notes: (measure.notes || []).map(note => {
+          const quantizedStep = Math.round(note.step / stepsPerQuantGrid) * stepsPerQuantGrid;
+          return {
+            ...note,
+            step: Math.max(0, Math.min(stepsPerMeasure - 1, quantizedStep)),
+          };
+        }),
+      }));
+
+      return {
+        ...state,
+        pattern: { ...state.pattern, measures },
+        ...pushUndoState(state),
+      };
+    }
+
     case ACTIONS.UPDATE_SOUND_SETTING: {
       const { drumId, setting, value } = action.payload;
       return {
@@ -574,6 +604,7 @@ export function PatternProvider({ children }) {
     addMeasure: useCallback((payload) => dispatch({ type: ACTIONS.ADD_MEASURE, payload }), []),
     deleteMeasure: useCallback((payload) => dispatch({ type: ACTIONS.DELETE_MEASURE, payload }), []),
     duplicateMeasure: useCallback((payload) => dispatch({ type: ACTIONS.DUPLICATE_MEASURE, payload }), []),
+    quantizeNotes: useCallback((payload) => dispatch({ type: ACTIONS.QUANTIZE_NOTES, payload }), []),
     updateSoundSetting: useCallback((payload) => dispatch({ type: ACTIONS.UPDATE_SOUND_SETTING, payload }), []),
     updateKeyBinding: useCallback((payload) => dispatch({ type: ACTIONS.UPDATE_KEY_BINDING, payload }), []),
     undo: useCallback(() => dispatch({ type: ACTIONS.UNDO }), []),

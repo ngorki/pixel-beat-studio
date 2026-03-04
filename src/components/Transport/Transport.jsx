@@ -35,17 +35,19 @@ export default function Transport({
         onClick={isPlaying ? onPause : onPlay}
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >
-        {isPlaying ? (
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-4 bg-current" />
-            <span className="w-2 h-4 bg-current" />
-          </span>
-        ) : (
-          <span
-            className="w-0 h-0 border-t-[6px] border-b-[6px] border-l-[10px]
-                       border-transparent border-l-current"
-          />
-        )}
+        <span className="flex items-center gap-2">
+          {isPlaying ? (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+              <rect x="1" y="1" width="3" height="10" />
+              <rect x="8" y="1" width="3" height="10" />
+            </svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+              <polygon points="2,1 2,11 11,6" />
+            </svg>
+          )}
+          {isPlaying ? 'PAUSE' : 'PLAY'}
+        </span>
       </button>
 
       {/* Stop Button */}
@@ -54,7 +56,12 @@ export default function Transport({
         onClick={onStop}
         aria-label="Stop"
       >
-        <span className="w-4 h-4 bg-current" />
+        <span className="flex items-center gap-2">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+            <rect x="1" y="1" width="10" height="10" />
+          </svg>
+          STOP
+        </span>
       </button>
 
       {/* Divider */}
