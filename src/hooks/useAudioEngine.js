@@ -16,6 +16,7 @@ const DEFAULT_SAMPLES = {
 };
 
 // Synth configurations for fallback
+// Using NoiseSynth for cymbals (much lighter than MetalSynth)
 const SYNTH_CONFIGS = {
   kick: () => new Tone.MembraneSynth({
     pitchDecay: 0.05,
@@ -27,21 +28,13 @@ const SYNTH_CONFIGS = {
     noise: { type: 'white' },
     envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.2 },
   }),
-  hihatClosed: () => new Tone.MetalSynth({
-    frequency: 200,
-    envelope: { attack: 0.001, decay: 0.05, release: 0.01 },
-    harmonicity: 5.1,
-    modulationIndex: 32,
-    resonance: 4000,
-    octaves: 1.5,
+  hihatClosed: () => new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.03 },
   }),
-  hihatOpen: () => new Tone.MetalSynth({
-    frequency: 200,
-    envelope: { attack: 0.001, decay: 0.3, release: 0.1 },
-    harmonicity: 5.1,
-    modulationIndex: 32,
-    resonance: 4000,
-    octaves: 1.5,
+  hihatOpen: () => new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 0.3, sustain: 0.05, release: 0.1 },
   }),
   tom1: () => new Tone.MembraneSynth({
     pitchDecay: 0.05,
@@ -61,21 +54,13 @@ const SYNTH_CONFIGS = {
     oscillator: { type: 'sine' },
     envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.6 },
   }),
-  crash: () => new Tone.MetalSynth({
-    frequency: 300,
-    envelope: { attack: 0.001, decay: 1, release: 0.5 },
-    harmonicity: 5.1,
-    modulationIndex: 40,
-    resonance: 4000,
-    octaves: 1.5,
+  crash: () => new Tone.NoiseSynth({
+    noise: { type: 'white' },
+    envelope: { attack: 0.001, decay: 1.0, sustain: 0.1, release: 0.8 },
   }),
-  ride: () => new Tone.MetalSynth({
-    frequency: 400,
-    envelope: { attack: 0.001, decay: 0.4, release: 0.2 },
-    harmonicity: 5.1,
-    modulationIndex: 20,
-    resonance: 5000,
-    octaves: 1,
+  ride: () => new Tone.NoiseSynth({
+    noise: { type: 'pink' },
+    envelope: { attack: 0.001, decay: 0.4, sustain: 0.05, release: 0.3 },
   }),
 };
 
@@ -196,37 +181,18 @@ export function useAudioEngine(soundSettings, onHit) {
 
   // Helper to trigger a synth correctly based on type
   const triggerSynth = useCallback((drumId, velocity, time) => {
-    const note = SYNTH_NOTES[drumId];
-    const volumeNode = volumeNodesRef.current[drumId];
+    const synth = synthsRef.current[drumId];
+    if (!synth) return;
 
-    if (!volumeNode) return;
+    const note = SYNTH_NOTES[drumId];
 
     try {
-      // For cymbal-type sounds (MetalSynth), create a fresh instance each time
-      // because MetalSynth can get stuck after playing once
-      const isCymbal = ['hihatClosed', 'hihatOpen', 'crash', 'ride'].includes(drumId);
-
-      if (isCymbal) {
-        // Create a one-shot MetalSynth
-        const cymbalSynth = SYNTH_CONFIGS[drumId]();
-        cymbalSynth.connect(volumeNode);
-        cymbalSynth.triggerAttackRelease('32n', time, velocity);
-        // Dispose after sound completes
-        setTimeout(() => {
-          cymbalSynth.dispose();
-        }, 2000);
+      if (synth instanceof Tone.MembraneSynth) {
+        synth.triggerAttackRelease(note || 'C2', '8n', time, velocity);
+      } else if (synth instanceof Tone.NoiseSynth) {
+        synth.triggerAttackRelease('8n', time, velocity);
       } else {
-        // Use persistent synth for drums
-        const synth = synthsRef.current[drumId];
-        if (!synth) return;
-
-        if (synth instanceof Tone.MembraneSynth) {
-          synth.triggerAttackRelease(note || 'C2', '8n', time, velocity);
-        } else if (synth instanceof Tone.NoiseSynth) {
-          synth.triggerAttackRelease('8n', time, velocity);
-        } else {
-          synth.triggerAttackRelease('8n', time, velocity);
-        }
+        synth.triggerAttackRelease('8n', time, velocity);
       }
     } catch (err) {
       console.warn('Synth trigger error:', err);
