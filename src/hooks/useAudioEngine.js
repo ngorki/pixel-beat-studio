@@ -194,6 +194,27 @@ export function useAudioEngine(soundSettings, onHit) {
     });
   }, [soundSettings, isLoaded]);
 
+  // Helper to trigger a synth correctly based on type
+  const triggerSynth = useCallback((drumId, velocity, time) => {
+    const synth = synthsRef.current[drumId];
+    if (!synth) return;
+
+    const note = SYNTH_NOTES[drumId];
+
+    // MembraneSynth needs a note, NoiseSynth and MetalSynth don't
+    if (synth instanceof Tone.MembraneSynth) {
+      synth.triggerAttackRelease(note || 'C2', '8n', time, velocity);
+    } else if (synth instanceof Tone.NoiseSynth) {
+      synth.triggerAttackRelease('8n', time, velocity);
+    } else if (synth instanceof Tone.MetalSynth) {
+      // MetalSynth needs triggerAttackRelease(duration, time, velocity)
+      synth.triggerAttackRelease('16n', time, velocity);
+    } else {
+      // Generic fallback
+      synth.triggerAttackRelease('8n', time, velocity);
+    }
+  }, []);
+
   // Trigger a drum hit
   const triggerDrum = useCallback((drumId, velocity = 100, time = Tone.now()) => {
     if (!isLoaded) return;
@@ -209,39 +230,26 @@ export function useAudioEngine(soundSettings, onHit) {
     try {
       if (settings.source === 'synth') {
         // Use synth
-        const synth = synthsRef.current[drumId];
-        if (synth) {
-          const note = SYNTH_NOTES[drumId];
-          if (note) {
-            synth.triggerAttackRelease(note, '8n', time, normalizedVelocity);
-          } else {
-            synth.triggerAttackRelease('8n', time, normalizedVelocity);
-          }
-        }
+        triggerSynth(drumId, normalizedVelocity, time);
       } else if (settings.source === 'custom' && customSamplesRef.current[drumId]) {
         // Use custom sample
         const player = customSamplesRef.current[drumId];
-        if (player.loaded) {
+        if (player.loaded && player.buffer && player.buffer.duration > 0) {
           player.volume.value = Tone.gainToDb(normalizedVelocity);
           player.start(time);
+        } else {
+          triggerSynth(drumId, normalizedVelocity, time);
         }
       } else {
         // Use default sample or fallback to synth
         const player = playersRef.current[drumId];
-        if (player && player.loaded) {
+        // Check if player has actually loaded audio data
+        if (player && player.loaded && player.buffer && player.buffer.duration > 0) {
           player.volume.value = Tone.gainToDb(normalizedVelocity);
           player.start(time);
         } else {
           // Fallback to synth
-          const synth = synthsRef.current[drumId];
-          if (synth) {
-            const note = SYNTH_NOTES[drumId];
-            if (note) {
-              synth.triggerAttackRelease(note, '8n', time, normalizedVelocity);
-            } else {
-              synth.triggerAttackRelease('8n', time, normalizedVelocity);
-            }
-          }
+          triggerSynth(drumId, normalizedVelocity, time);
         }
       }
 
@@ -252,7 +260,7 @@ export function useAudioEngine(soundSettings, onHit) {
     } catch (err) {
       console.error('Error triggering drum:', err);
     }
-  }, [isLoaded, soundSettings, onHit]);
+  }, [isLoaded, soundSettings, triggerSynth, onHit]);
 
   // Load custom sample
   const loadCustomSample = useCallback(async (drumId, file) => {

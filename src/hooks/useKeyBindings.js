@@ -13,6 +13,11 @@ export function useKeyBindings(triggerDrum, recordHit, isRecording) {
       return;
     }
 
+    // Ignore key repeat (when key is held down)
+    if (e.repeat) {
+      return;
+    }
+
     // Handle keyboard shortcuts
     if (e.ctrlKey || e.metaKey) {
       switch (e.key.toLowerCase()) {

@@ -15,17 +15,17 @@ function AppContent() {
   const { state, actions } = usePattern();
   const { pattern, activeTab, isRecording } = state;
 
-  const [hitPieces, setHitPieces] = useState([]);
+  const [hitCounters, setHitCounters] = useState({});
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [loadModalOpen, setLoadModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Handle drum hit animation
+  // Handle drum hit animation - use counters for proper retrigger
   const handleHit = useCallback((drumId) => {
-    setHitPieces(prev => [...prev, drumId]);
-    setTimeout(() => {
-      setHitPieces(prev => prev.filter(id => id !== drumId));
-    }, 150);
+    setHitCounters(prev => ({
+      ...prev,
+      [drumId]: (prev[drumId] || 0) + 1,
+    }));
   }, []);
 
   // Audio engine
@@ -106,7 +106,7 @@ function AppContent() {
 
       {/* Drum Kit */}
       <div className="h-[40vh] min-h-[280px] bg-[#0D0D1A] border-b border-[#333355]">
-        <DrumKit onTrigger={handleTrigger} hitPieces={hitPieces} />
+        <DrumKit onTrigger={handleTrigger} hitCounters={hitCounters} />
       </div>
 
       {/* Bottom Panel - Tabs */}

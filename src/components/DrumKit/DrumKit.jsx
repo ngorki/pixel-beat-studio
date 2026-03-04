@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { usePattern, DRUM_PIECES } from '../../store/PatternContext';
 import DrumPiece from './DrumPiece';
 
-export default function DrumKit({ onTrigger, hitPieces }) {
+export default function DrumKit({ onTrigger, hitCounters }) {
   const { state, actions } = usePattern();
   const { pattern, activeDrumPiece } = state;
   const keyBindings = pattern.keyBindings;
@@ -21,14 +21,14 @@ export default function DrumKit({ onTrigger, hitPieces }) {
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'crash')}
             keyBinding={keyBindings['crash']}
-            isHit={hitPieces.includes('crash')}
+            hitCount={hitCounters['crash'] || 0}
             isActive={activeDrumPiece === 'crash'}
             onClick={() => handlePieceClick('crash')}
           />
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'ride')}
             keyBinding={keyBindings['ride']}
-            isHit={hitPieces.includes('ride')}
+            hitCount={hitCounters['ride'] || 0}
             isActive={activeDrumPiece === 'ride'}
             onClick={() => handlePieceClick('ride')}
           />
@@ -39,28 +39,28 @@ export default function DrumKit({ onTrigger, hitPieces }) {
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'hihatClosed')}
             keyBinding={keyBindings['hihatClosed']}
-            isHit={hitPieces.includes('hihatClosed')}
+            hitCount={hitCounters['hihatClosed'] || 0}
             isActive={activeDrumPiece === 'hihatClosed'}
             onClick={() => handlePieceClick('hihatClosed')}
           />
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'hihatOpen')}
             keyBinding={keyBindings['hihatOpen']}
-            isHit={hitPieces.includes('hihatOpen')}
+            hitCount={hitCounters['hihatOpen'] || 0}
             isActive={activeDrumPiece === 'hihatOpen'}
             onClick={() => handlePieceClick('hihatOpen')}
           />
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'tom1')}
             keyBinding={keyBindings['tom1']}
-            isHit={hitPieces.includes('tom1')}
+            hitCount={hitCounters['tom1'] || 0}
             isActive={activeDrumPiece === 'tom1'}
             onClick={() => handlePieceClick('tom1')}
           />
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'tom2')}
             keyBinding={keyBindings['tom2']}
-            isHit={hitPieces.includes('tom2')}
+            hitCount={hitCounters['tom2'] || 0}
             isActive={activeDrumPiece === 'tom2'}
             onClick={() => handlePieceClick('tom2')}
           />
@@ -71,14 +71,14 @@ export default function DrumKit({ onTrigger, hitPieces }) {
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'snare')}
             keyBinding={keyBindings['snare']}
-            isHit={hitPieces.includes('snare')}
+            hitCount={hitCounters['snare'] || 0}
             isActive={activeDrumPiece === 'snare'}
             onClick={() => handlePieceClick('snare')}
           />
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'kick')}
             keyBinding={keyBindings['kick']}
-            isHit={hitPieces.includes('kick')}
+            hitCount={hitCounters['kick'] || 0}
             isActive={activeDrumPiece === 'kick'}
             onClick={() => handlePieceClick('kick')}
             isLarge
@@ -86,7 +86,7 @@ export default function DrumKit({ onTrigger, hitPieces }) {
           <DrumPiece
             piece={DRUM_PIECES.find(p => p.id === 'floorTom')}
             keyBinding={keyBindings['floorTom']}
-            isHit={hitPieces.includes('floorTom')}
+            hitCount={hitCounters['floorTom'] || 0}
             isActive={activeDrumPiece === 'floorTom'}
             onClick={() => handlePieceClick('floorTom')}
           />

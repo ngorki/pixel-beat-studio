@@ -66,18 +66,19 @@ const PIECE_STYLES = {
   },
 };
 
-export default function DrumPiece({ piece, keyBinding, isHit, isActive, onClick, isLarge }) {
+export default function DrumPiece({ piece, keyBinding, hitCount, isActive, onClick, isLarge }) {
   const [animating, setAnimating] = useState(false);
   const style = PIECE_STYLES[piece.id] || PIECE_STYLES.snare;
   const isCymbal = piece.type === 'cymbal';
 
+  // Trigger animation whenever hitCount changes (and is > 0)
   useEffect(() => {
-    if (isHit) {
+    if (hitCount > 0) {
       setAnimating(true);
       const timeout = setTimeout(() => setAnimating(false), isCymbal ? 150 : 100);
       return () => clearTimeout(timeout);
     }
-  }, [isHit, isCymbal]);
+  }, [hitCount, isCymbal]);
 
   const scale = isLarge ? 1.3 : 1;
   const width = style.width * scale;
