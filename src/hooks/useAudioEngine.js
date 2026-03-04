@@ -196,22 +196,40 @@ export function useAudioEngine(soundSettings, onHit) {
 
   // Helper to trigger a synth correctly based on type
   const triggerSynth = useCallback((drumId, velocity, time) => {
-    const synth = synthsRef.current[drumId];
-    if (!synth) return;
-
     const note = SYNTH_NOTES[drumId];
+    const volumeNode = volumeNodesRef.current[drumId];
 
-    // MembraneSynth needs a note, NoiseSynth and MetalSynth don't
-    if (synth instanceof Tone.MembraneSynth) {
-      synth.triggerAttackRelease(note || 'C2', '8n', time, velocity);
-    } else if (synth instanceof Tone.NoiseSynth) {
-      synth.triggerAttackRelease('8n', time, velocity);
-    } else if (synth instanceof Tone.MetalSynth) {
-      // MetalSynth needs triggerAttackRelease(duration, time, velocity)
-      synth.triggerAttackRelease('16n', time, velocity);
-    } else {
-      // Generic fallback
-      synth.triggerAttackRelease('8n', time, velocity);
+    if (!volumeNode) return;
+
+    try {
+      // For cymbal-type sounds (MetalSynth), create a fresh instance each time
+      // because MetalSynth can get stuck after playing once
+      const isCymbal = ['hihatClosed', 'hihatOpen', 'crash', 'ride'].includes(drumId);
+
+      if (isCymbal) {
+        // Create a one-shot MetalSynth
+        const cymbalSynth = SYNTH_CONFIGS[drumId]();
+        cymbalSynth.connect(volumeNode);
+        cymbalSynth.triggerAttackRelease('32n', time, velocity);
+        // Dispose after sound completes
+        setTimeout(() => {
+          cymbalSynth.dispose();
+        }, 2000);
+      } else {
+        // Use persistent synth for drums
+        const synth = synthsRef.current[drumId];
+        if (!synth) return;
+
+        if (synth instanceof Tone.MembraneSynth) {
+          synth.triggerAttackRelease(note || 'C2', '8n', time, velocity);
+        } else if (synth instanceof Tone.NoiseSynth) {
+          synth.triggerAttackRelease('8n', time, velocity);
+        } else {
+          synth.triggerAttackRelease('8n', time, velocity);
+        }
+      }
+    } catch (err) {
+      console.warn('Synth trigger error:', err);
     }
   }, []);
 
